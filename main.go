@@ -102,6 +102,8 @@ func extractArtifactContents(ctx context.Context, f *File) (string, error) {
 
 	r := strings.NewReader(contents)
 
+	fmt.Println(contents)
+
 	var description, version string
 	if _, err := fmt.Fscanf(r, "description = '%s'", &description, &version); err != nil {
 		r.Reset(contents)
