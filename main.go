@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 )
 
 var GradleVersion = "jdk21-alpine"
@@ -80,45 +79,5 @@ func getGradle(src *Directory) *Gradle {
 }
 
 func getArtifactName(ctx context.Context, ctr *Container) (string, error) {
-	kgradle := ctr.File("build.gradle.kts")
-	if kgradle != nil {
-		// read contents of build.gradle.kts and join together
-		// the description and the version
-		return extractArtifactContents(ctx, kgradle)
-	}
-
-	return extractArtifactContents(ctx, ctr.File("build.gradle"))
-}
-
-func extractArtifactContents(ctx context.Context, f *File) (string, error) {
-	if f == nil {
-		return "", fmt.Errorf("gradle build file not found")
-	}
-
-	contents, err := f.Contents(ctx)
-	if err != nil {
-		return "", fmt.Errorf("could not read gradle build file: %w", err)
-	}
-
-	r := strings.NewReader(contents)
-
-	fmt.Println(contents)
-
-	var description, version string
-	if _, err := fmt.Fscanf(r, "description = '%s'", &description, &version); err != nil {
-		r.Reset(contents)
-		if _, err := fmt.Fscanf(r, "description = \"%s\"", &description, &version); err != nil {
-			return "", err
-		}
-	}
-
-	r.Reset(contents)
-	if _, err := fmt.Fscanf(r, "version = '%s'", &version); err != nil {
-		r.Reset(contents)
-		if _, err := fmt.Fscanf(r, "version = \"%s\"", &version); err != nil {
-			return "", err
-		}
-	}
-
-	return fmt.Sprintf("build/libs/%s-%s.jar", description, version), nil
+	return ctr.WithExec([]string{"artifact", "-q"}).Stdout(ctx)
 }
