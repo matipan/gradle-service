@@ -9,14 +9,8 @@ import (
 
 var GradleVersion = "jdk21-alpine"
 
-type GradleService struct{}
-
-func (m *GradleService) Build(ctx context.Context) *Container {
-	return getGradle().Build()
-}
-
-func (m *GradleService) Test(ctx context.Context) *Container {
-	return getGradle().Test()
+type GradleService struct {
+	*Gradle
 }
 
 func (m *GradleService) Publish(ctx context.Context, tag string) (string, error) {
@@ -45,7 +39,7 @@ func (m *GradleService) Mysql(ctx context.Context) *Service {
 }
 
 func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
-	ctr, err := m.Build(ctx).Sync(ctx)
+	ctr, err := m.Build().Sync(ctx)
 	if err != nil {
 		log.Fatalf("bulid failed: %s", err)
 	}
@@ -54,19 +48,12 @@ func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
 		log.Fatalf("could not get artifact name: %s", err)
 	}
 
-	jar := m.Build(ctx).File(artifactName)
+	jar := ctr.File(artifactName)
 	return dag.Container().
 		From("amazoncorretto:21.0.1-alpine3.18").
 		WithWorkdir("/app").
 		WithFile("app.jar", jar).
 		WithEntrypoint([]string{"java", "-jar", "app.jar", "--server.port=80", "--spring.profiles.active=default"})
-}
-
-func getGradle() *Gradle {
-	return dag.Gradle().
-		WithVersion(GradleVersion).
-		WithSource(dag.Host().Directory("."))
-
 }
 
 func getArtifactName(ctx context.Context, ctr *Container) (string, error) {
