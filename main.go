@@ -60,6 +60,7 @@ func (m *GradleService) Service(ctx context.Context, sqlInitDB *File) *Service {
 		WithEnvVariable("DB_PORT", "3306").
 		WithServiceBinding("mysql", m.Mysql(ctx, sqlInitDB)).
 		WithExposedPort(80).
+		WithEntrypoint([]string{"java", "-jar", "app.jar", "--server.port=80", "--spring.profiles.active=default"}).
 		AsService()
 }
 
