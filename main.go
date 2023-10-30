@@ -51,7 +51,7 @@ func (m *GradleService) Publish(ctx context.Context, registry, tag string) (stri
 	return m.BuildRuntime(ctx).Publish(ctx, fmt.Sprintf("%s/services-orders:%s", registry, tag))
 }
 
-func (m *GradleService) Service(ctx context.Context, sqlInitDB string) *Service {
+func (m *GradleService) Service(ctx context.Context, sqlInitDB *File) *Service {
 	runtime := m.BuildRuntime(ctx)
 
 	return runtime.
@@ -62,12 +62,12 @@ func (m *GradleService) Service(ctx context.Context, sqlInitDB string) *Service 
 		AsService()
 }
 
-func (m *GradleService) Mysql(ctx context.Context, sqlInitDB string) *Service {
+func (m *GradleService) Mysql(ctx context.Context, sqlInitDB *File) *Service {
 	return dag.Container().
 		From("mysql:8.2.0").
 		WithEnvVariable("MYSQL_ROOT_PASSWORD", "gotiendanube").
 		WithEnvVariable("MYSQL_DATABASE", "tiendanube").
-		WithFile("/docker-entrypoint-initdb.d/db.sql", dag.Host().File(sqlInitDB)).
+		WithFile("/docker-entrypoint-initdb.d/db.sql", sqlInitDB).
 		WithExposedPort(3306).
 		AsService()
 }
