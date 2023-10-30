@@ -43,9 +43,9 @@ func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
 		WithExec([]string{"apk", "update", "&&", "apk", "--no-cache", "add", "ca-certificates", "curl", "tcpdump", "procps", "bind-tools"}).
 		WithExec([]string{"wget", "-O", "dd-java-agent.jar", "https://dtdg.co/latest-java-tracer"}).
 		WithWorkdir("/app").
-		WithFile("app.jar", jar).
-		// WithEntrypoint([]string{"sh", "-c", "java $JAVA_OPTS -jar app.jar --server.port=80 --spring.profiles.active=default"})
-		WithEntrypoint([]string{"java", "-jar", "app.jar", "--server.port=80", "--spring.profiles.active=default"})
+		WithFile("app.jar", jar)
+	// WithEntrypoint([]string{"sh", "-c", "java $JAVA_OPTS -jar app.jar --server.port=80 --spring.profiles.active=default"})
+	// WithEntrypoint([]string{"java", "-jar", "app.jar", "--server.port=80", "--spring.profiles.active=default"})
 }
 
 func (m *GradleService) Publish(ctx context.Context, registry, tag string) (string, error) {
