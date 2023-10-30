@@ -10,20 +10,20 @@ import (
 var GradleVersion = "jdk21-alpine"
 
 type GradleService struct {
-	Gradle *Gradle
+	Source *Directory
 }
 
 func (m *GradleService) WithSource(src *Directory) *GradleService {
-	m.Gradle = getGradle(src)
+	m.Source = src
 	return m
 }
 
 func (m *GradleService) Build(ctx context.Context) *Container {
-	return m.Gradle.Build()
+	return getGradle(m.Source).Build()
 }
 
 func (m *GradleService) Test(ctx context.Context) *Container {
-	return m.Gradle.Test()
+	return getGradle(m.Source).Test()
 }
 
 func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
@@ -70,6 +70,10 @@ func (m *GradleService) Mysql(ctx context.Context) *Service {
 }
 
 func getGradle(src *Directory) *Gradle {
+	if src == nil {
+		panic("source directory is required. You need to call WithSource before performing actions")
+	}
+
 	return dag.Gradle().
 		WithVersion(GradleVersion).
 		WithSource(src)
