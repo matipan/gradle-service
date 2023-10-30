@@ -41,7 +41,7 @@ func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
 	return dag.Container().
 		From("amazoncorretto:21.0.1-alpine3.18").
 		WithExec([]string{"apk", "update", "&&", "apk", "--no-cache", "add", "ca-certificates", "curl", "tcpdump", "procps", "bind-tools"}).
-		WithExec([]string{"curl", "-L", "-o", "dd-java-agent.jar", "https://dtdg.co/latest-java-tracer"}).
+		WithExec([]string{"wget", "-O", "dd-java-agent.jar", "https://dtdg.co/latest-java-tracer"}).
 		WithWorkdir("/app").
 		WithFile("app.jar", jar).
 		WithEntrypoint([]string{"java", "$JAVA_OPTS", "-jar", "app.jar", "--server.port=80", "--spring.profiles.active=default"})
