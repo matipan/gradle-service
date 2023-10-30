@@ -30,7 +30,8 @@ func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
 	if err != nil {
 		log.Fatalf("bulid failed: %s", err)
 	}
-	artifactName, err := getArtifactName(ctx, ctr)
+
+	artifactName, err := m.getArtifactName(ctx)
 	if err != nil {
 		log.Fatalf("could not get artifact name: %s", err)
 	}
@@ -78,6 +79,10 @@ func getGradle(src *Directory) *Gradle {
 		WithSource(src)
 }
 
-func getArtifactName(ctx context.Context, ctr *Container) (string, error) {
-	return ctr.WithExec([]string{"artifact", "-q"}).Stdout(ctx)
+func (m *GradleService) getArtifactName(ctx context.Context) (string, error) {
+	artifact, err := getGradle(m.Source).Task("artifact", []string{"-q"}).Stdout(ctx)
+	if err != nil {
+		return "", fmt.Errorf("could not get artifact name: %s", err)
+	}
+	return fmt.Sprintf("build/libs/%s", artifact), nil
 }
