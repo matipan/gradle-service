@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -44,10 +45,13 @@ func (m *GradleService) Mysql(ctx context.Context) *Service {
 }
 
 func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
-	ctr := m.Build(ctx)
+	ctr, err := m.Build(ctx).Sync(ctx)
+	if err != nil {
+		log.Fatalf("bulid failed: %s", err)
+	}
 	artifactName, err := getArtifactName(ctx, ctr)
 	if err != nil {
-		panic(err)
+		log.Fatalf("could not get artifact name: %s", err)
 	}
 
 	jar := m.Build(ctx).File(artifactName)
