@@ -73,7 +73,6 @@ func getGradle(src *Directory) *Gradle {
 	return dag.Gradle().
 		WithVersion(GradleVersion).
 		WithSource(src)
-
 }
 
 func getArtifactName(ctx context.Context, ctr *Container) (string, error) {
