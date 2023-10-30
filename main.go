@@ -84,5 +84,5 @@ func (m *GradleService) getArtifactName(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not get artifact name: %s", err)
 	}
-	return fmt.Sprintf("build/libs/%s", artifact), nil
+	return fmt.Sprintf("/app/build/libs/%s", artifact), nil
 }
