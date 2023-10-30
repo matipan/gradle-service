@@ -1,0 +1,7 @@
+{
+  "name": "gradle-service",
+  "sdk": "go",
+  "dependencies": [
+    "github.com/matipan/daggerverse/gradle@ec2082ae5c4f2420f36cc0e3855b8b70e880391d"
+  ]
+}
