@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 )
 
 var GradleVersion = "jdk21-alpine"
@@ -28,7 +29,7 @@ func (m *GradleService) Test(ctx context.Context) *Container {
 func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
 	ctr, err := m.Build(ctx).Sync(ctx)
 	if err != nil {
-		log.Fatalf("bulid failed: %s", err)
+		log.Fatalf("build failed: %s", err)
 	}
 
 	artifactName, err := m.getArtifactName(ctx)
@@ -84,5 +85,6 @@ func (m *GradleService) getArtifactName(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not get artifact name: %s", err)
 	}
+	artifact = strings.TrimSuffix(artifact, "\n")
 	return fmt.Sprintf("/app/build/libs/%s", artifact), nil
 }
