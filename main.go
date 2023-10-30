@@ -10,7 +10,38 @@ import (
 var GradleVersion = "jdk21-alpine"
 
 type GradleService struct {
-	*Gradle
+	Gradle *Gradle
+}
+
+func (m *GradleService) WithSource(src *Directory) *GradleService {
+	m.Gradle = getGradle(src)
+	return m
+}
+
+func (m *GradleService) Build(ctx context.Context) *Container {
+	return m.Gradle.Build()
+}
+
+func (m *GradleService) Test(ctx context.Context) *Container {
+	return m.Gradle.Test()
+}
+
+func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
+	ctr, err := m.Build(ctx).Sync(ctx)
+	if err != nil {
+		log.Fatalf("bulid failed: %s", err)
+	}
+	artifactName, err := getArtifactName(ctx, ctr)
+	if err != nil {
+		log.Fatalf("could not get artifact name: %s", err)
+	}
+
+	jar := ctr.File(artifactName)
+	return dag.Container().
+		From("amazoncorretto:21.0.1-alpine3.18").
+		WithWorkdir("/app").
+		WithFile("app.jar", jar).
+		WithEntrypoint([]string{"java", "-jar", "app.jar", "--server.port=80", "--spring.profiles.active=default"})
 }
 
 func (m *GradleService) Publish(ctx context.Context, tag string) (string, error) {
@@ -38,22 +69,11 @@ func (m *GradleService) Mysql(ctx context.Context) *Service {
 		AsService()
 }
 
-func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
-	ctr, err := m.Build().Sync(ctx)
-	if err != nil {
-		log.Fatalf("bulid failed: %s", err)
-	}
-	artifactName, err := getArtifactName(ctx, ctr)
-	if err != nil {
-		log.Fatalf("could not get artifact name: %s", err)
-	}
+func getGradle(src *Directory) *Gradle {
+	return dag.Gradle().
+		WithVersion(GradleVersion).
+		WithSource(src)
 
-	jar := ctr.File(artifactName)
-	return dag.Container().
-		From("amazoncorretto:21.0.1-alpine3.18").
-		WithWorkdir("/app").
-		WithFile("app.jar", jar).
-		WithEntrypoint([]string{"java", "-jar", "app.jar", "--server.port=80", "--spring.profiles.active=default"})
 }
 
 func getArtifactName(ctx context.Context, ctr *Container) (string, error) {
