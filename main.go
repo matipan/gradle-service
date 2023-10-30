@@ -45,8 +45,8 @@ func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
 		WithEntrypoint([]string{"java", "-jar", "app.jar", "--server.port=80", "--spring.profiles.active=default"})
 }
 
-func (m *GradleService) Publish(ctx context.Context, tag string) (string, error) {
-	return m.BuildRuntime(ctx).Publish(ctx, fmt.Sprintf("services-orders:%s", tag))
+func (m *GradleService) Publish(ctx context.Context, registry, tag string) (string, error) {
+	return m.BuildRuntime(ctx).Publish(ctx, fmt.Sprintf("%s/services-orders:%s", registry, tag))
 }
 
 func (m *GradleService) Service(ctx context.Context) *Service {
