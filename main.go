@@ -104,10 +104,6 @@ func extractArtifactContents(ctx context.Context, f *File) (string, error) {
 
 	var description, version string
 	if _, err := fmt.Fscanf(r, "description = '%s'", &description, &version); err != nil {
-		return "", err
-	}
-
-	if description == "" {
 		r.Reset(contents)
 		if _, err := fmt.Fscanf(r, "description = \"%s\"", &description, &version); err != nil {
 			return "", err
@@ -116,10 +112,6 @@ func extractArtifactContents(ctx context.Context, f *File) (string, error) {
 
 	r.Reset(contents)
 	if _, err := fmt.Fscanf(r, "version = '%s'", &version); err != nil {
-		return "", err
-	}
-
-	if version == "" {
 		r.Reset(contents)
 		if _, err := fmt.Fscanf(r, "version = \"%s\"", &version); err != nil {
 			return "", err
