@@ -43,9 +43,8 @@ func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
 		WithExec([]string{"apk", "update", "&&", "apk", "--no-cache", "add", "ca-certificates", "curl", "tcpdump", "procps", "bind-tools"}).
 		WithExec([]string{"wget", "-O", "dd-java-agent.jar", "https://dtdg.co/latest-java-tracer"}).
 		WithWorkdir("/app").
-		WithFile("app.jar", jar)
-	// WithEntrypoint([]string{"sh", "-c", "java $JAVA_OPTS -jar app.jar --server.port=80 --spring.profiles.active=default"})
-	// WithEntrypoint([]string{"java", "-jar", "app.jar", "--server.port=80", "--spring.profiles.active=default"})
+		WithFile("app.jar", jar).
+		WithEntrypoint([]string{"sh", "-c", "java $JAVA_OPTS -jar app.jar --server.port=80 --spring.profiles.active=default"})
 }
 
 func (m *GradleService) Publish(ctx context.Context, registry, tag string) (string, error) {
@@ -60,7 +59,6 @@ func (m *GradleService) Service(ctx context.Context, sqlInitDB *File) *Service {
 		WithEnvVariable("DB_PORT", "3306").
 		WithServiceBinding("mysql", m.Mysql(ctx, sqlInitDB)).
 		WithExposedPort(80).
-		WithEntrypoint([]string{"java", "-jar", "app.jar", "--server.port=80", "--spring.profiles.active=default"}).
 		AsService()
 }
 
@@ -79,9 +77,14 @@ func getGradle(src *Directory) *Gradle {
 		panic("source directory is required. You need to call WithSource before performing actions")
 	}
 
-	return dag.Gradle().
-		WithVersion(GradleVersion).
-		WithSource(src)
+	gradle := dag.Gradle().
+		FromVersion(GradleVersion).
+		WithDirectory(src)
+	if src.File("gradlew") != nil {
+		gradle = gradle.WithWrapper()
+	}
+
+	return gradle
 }
 
 func (m *GradleService) getArtifactName(ctx context.Context) (string, error) {
