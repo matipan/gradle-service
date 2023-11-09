@@ -11,6 +11,8 @@ var GradleVersion = "jdk21-alpine"
 
 type GradleService struct {
 	Source *Directory
+
+	gradle *Gradle
 }
 
 func (m *GradleService) WithSource(src *Directory) *GradleService {
@@ -19,11 +21,11 @@ func (m *GradleService) WithSource(src *Directory) *GradleService {
 }
 
 func (m *GradleService) Build(ctx context.Context) *Container {
-	return getGradle(m.Source).Build()
+	return m.getGradle(m.Source).Build()
 }
 
 func (m *GradleService) Test(ctx context.Context) *Container {
-	return getGradle(m.Source).Test()
+	return m.getGradle(m.Source).Test()
 }
 
 func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
@@ -32,7 +34,7 @@ func (m *GradleService) BuildRuntime(ctx context.Context) *Container {
 		log.Fatalf("build failed: %s", err)
 	}
 
-	artifactName, err := m.getArtifactName(ctx)
+	artifactName, err := getArtifactName(ctx, m.gradle)
 	if err != nil {
 		log.Fatalf("could not get artifact name: %s", err)
 	}
@@ -72,9 +74,13 @@ func (m *GradleService) Mysql(ctx context.Context, sqlInitDB *File) *Service {
 		AsService()
 }
 
-func getGradle(src *Directory) *Gradle {
+func (m *GradleService) getGradle(src *Directory) *Gradle {
 	if src == nil {
 		panic("source directory is required. You need to call WithSource before performing actions")
+	}
+
+	if m.gradle != nil {
+		return m.gradle
 	}
 
 	gradle := dag.Gradle().
@@ -84,11 +90,12 @@ func getGradle(src *Directory) *Gradle {
 		gradle = gradle.WithWrapper()
 	}
 
+	m.gradle = gradle
 	return gradle
 }
 
-func (m *GradleService) getArtifactName(ctx context.Context) (string, error) {
-	artifact, err := getGradle(m.Source).Task("artifact", []string{"-q"}).Stdout(ctx)
+func getArtifactName(ctx context.Context, gradle *Gradle) (string, error) {
+	artifact, err := gradle.Task("artifact", []string{"-q"}).Stdout(ctx)
 	if err != nil {
 		return "", fmt.Errorf("could not get artifact name: %s", err)
 	}
