@@ -95,10 +95,17 @@ func (m *GradleService) getGradle(src *Directory) *Gradle {
 }
 
 func getArtifactName(ctx context.Context, gradle *Gradle) (string, error) {
-	artifact, err := gradle.Task("artifact", []string{"-q"}).Stdout(ctx)
+	out, err := gradle.Task("artifact", []string{"-q"}).Stdout(ctx)
 	if err != nil {
 		return "", fmt.Errorf("could not get artifact name: %s", err)
 	}
-	artifact = strings.TrimSuffix(artifact, "\n")
+	out = strings.TrimSuffix(out, "\n")
+	output := strings.Split(out, "\n")
+
+	artifact := output[0]
+	if len(output) != 1 {
+		artifact = output[len(output)-1]
+	}
+
 	return fmt.Sprintf("/app/build/libs/%s", artifact), nil
 }
